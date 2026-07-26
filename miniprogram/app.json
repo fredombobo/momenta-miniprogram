@@ -1,7 +1,8 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/result/result"
+    "pages/result/result",
+    "pages/premium/premium"
   ],
   "window": {
     "backgroundTextStyle": "dark",

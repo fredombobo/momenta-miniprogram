@@ -1,0 +1,61 @@
+<view class="page-bg"></view>
+<view class="page-content">
+  <view class="custom-nav" style="padding-top: {{statusBarHeight}}px;">
+    <view class="custom-nav-inner">
+      <view class="nav-back" bindtap="goBack">
+        <text class="nav-back-icon">‹</text>
+        <text class="nav-back-text">返回</text>
+      </view>
+      <text class="nav-title">升级 Momenta</text>
+      <view class="nav-placeholder"></view>
+    </view>
+  </view>
+
+  <view class="premium-body" style="padding-top: {{navBarHeight + 12}}px;">
+    <!-- 当前权益 -->
+    <view class="status-card">
+      <text class="status-label">当前权益</text>
+      <view wx:if="{{membership.isPremium}}">
+        <text class="status-value accent">会员生效中</text>
+        <text class="status-sub" wx:if="{{premiumUntilText}}">有效期至 {{premiumUntilText}}</text>
+      </view>
+      <view wx:else>
+        <text class="status-value">免费用户</text>
+        <text class="status-sub">每日 2 次免费 · 单次券 {{membership.credits || 0}} 张</text>
+      </view>
+      <view class="mock-tag" wx:if="{{mockPay}}">Mock 支付模式</view>
+    </view>
+
+    <view class="benefits">
+      <text class="section-title">会员权益</text>
+      <text class="benefit-item">• 无限次凝固瞬间</text>
+      <text class="benefit-item">• 高清记忆卡片导出</text>
+      <text class="benefit-item">• 专属情绪风格优先</text>
+    </view>
+
+    <text class="section-title">选择方案</text>
+
+    <view wx:if="{{loading}}" class="loading-text">加载中...</view>
+
+    <view
+      class="product-card"
+      wx:for="{{products}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="onBuy"
+    >
+      <view class="product-left">
+        <text class="product-name">{{item.name}}</text>
+        <text class="product-desc">{{item.desc}}</text>
+      </view>
+      <view class="product-right">
+        <text class="product-price">¥{{item.priceYuan}}</text>
+        <text class="product-cta">{{paying ? '处理中' : '购买'}}</text>
+      </view>
+    </view>
+
+    <text class="pay-hint">
+      {{mockPay ? '开发阶段：未配置商户号时使用模拟支付，确认后立即到账。' : '支付由微信支付提供，到账后权益自动开通。'}}
+    </text>
+  </view>
+</view>

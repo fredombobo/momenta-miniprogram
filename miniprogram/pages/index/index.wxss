@@ -13,7 +13,7 @@
 /* Hero */
 .hero-section {
   text-align: center;
-  padding: 80rpx 40rpx 60rpx;
+  padding: 40rpx 40rpx 60rpx;
 }
 
 .hero-title-wrap {

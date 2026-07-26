@@ -1,6 +1,6 @@
 <!--pages/index/index.wxml-->
 <view class="page-bg"></view>
-<view class="page-content">
+<view class="page-content" style="padding-top: {{navBarHeight}}px;">
   <!-- 入场动画 -->
   <view class="intro-overlay" wx:if="{{showIntro}}" style="opacity: {{introOpacity}};">
     <view class="flex-col-center gap-40">
@@ -19,7 +19,7 @@
   </view>
 
   <!-- 输入区 -->
-  <view class="input-section" wx:if="{{!isGenerating && !hasResult}}">
+  <view class="input-section" wx:if="{{!isGenerating}}">
     <view class="input-wrap">
       <textarea
         class="input-area"
@@ -40,7 +40,6 @@
         <text class="emotion-count" wx:if="{{selectedEmotions.length > 0}}">已选 {{selectedEmotions.length}}/3</text>
       </view>
 
-      <!-- 温暖系 -->
       <text class="group-label">温暖系</text>
       <view class="emotion-chips-wrap">
         <view
@@ -53,7 +52,6 @@
         >{{item.label}}</view>
       </view>
 
-      <!-- 炽热系 -->
       <text class="group-label">炽热系</text>
       <view class="emotion-chips-wrap">
         <view
@@ -66,7 +64,6 @@
         >{{item.label}}</view>
       </view>
 
-      <!-- 冷色系 -->
       <text class="group-label">冷色系</text>
       <view class="emotion-chips-wrap">
         <view
@@ -79,7 +76,6 @@
         >{{item.label}}</view>
       </view>
 
-      <!-- 复杂系 -->
       <text class="group-label">复杂系</text>
       <view class="emotion-chips-wrap">
         <view
@@ -93,22 +89,36 @@
       </view>
     </view>
 
-    <!-- 免费次数提示 -->
-    <view class="free-usage-hint" wx:if="{{remainingFree <= 0 && !isPremium}}">
+    <!-- 配额提示 -->
+    <view class="free-usage-hint" wx:if="{{isPremium}}">
+      <text>会员无限生成</text>
+      <view class="btn-upgrade-small" bindtap="openPremium">
+        <text>会员中心</text>
+      </view>
+    </view>
+    <view class="free-usage-hint" wx:elif="{{credits > 0}}">
+      <text>单次券 {{credits}} 张 · 今日免费剩 {{remainingFree}} 次</text>
+      <view class="btn-upgrade-small" bindtap="openPremium">
+        <text>升级 →</text>
+      </view>
+    </view>
+    <view class="free-usage-hint" wx:elif="{{remainingFree <= 0}}">
       <text>今日免费次数已用完</text>
-      <view class="btn-upgrade-small" bindtap="showPremium">
+      <view class="btn-upgrade-small" bindtap="openPremium">
         <text>升级无限生成 →</text>
       </view>
     </view>
-    <view class="free-usage-hint" wx:elif="{{remainingFree > 0}}">
+    <view class="free-usage-hint" wx:else>
       <text>今日剩余 {{remainingFree}} 次免费生成</text>
+      <view class="btn-upgrade-small" bindtap="openPremium">
+        <text>升级 →</text>
+      </view>
     </view>
 
-    <!-- 生成按钮 -->
     <button
-      class="btn-primary {{!inputText.trim() ? 'disabled' : ''}}"
+      class="btn-primary {{!inputText ? 'disabled' : ''}}"
       bindtap="handleGenerate"
-      disabled="{{!inputText.trim()}}"
+      disabled="{{!inputText}}"
     >冻结这个瞬间</button>
 
     <text class="error-text" wx:if="{{error}}">{{error}}</text>

@@ -1,7 +1,6 @@
 // pages/index/index.js
-const app = getApp();
+const pay = require('../../utils/pay');
 
-// 情绪数据
 const ALL_EMOTIONS = [
   { id: 'calm', label: '平静', color: '#7EB8C9', group: 'warm' },
   { id: 'joy', label: '喜悦', color: '#C9A55C', group: 'warm' },
@@ -25,19 +24,24 @@ const ALL_EMOTIONS = [
   { id: 'awe', label: '敬畏', color: '#4A6B8A', group: 'complex' },
 ];
 
+const FREE_PER_DAY = 2;
+const app = getApp();
+
 Page({
   data: {
     inputText: '',
     selectedEmotions: [],
     isGenerating: false,
     loadingStep: 0,
-    hasResult: false,
     error: null,
     showIntro: false,
     introOpacity: 1,
     showIntroText: false,
-    remainingFree: 2,
+    remainingFree: FREE_PER_DAY,
     isPremium: false,
+    credits: 0,
+    statusBarHeight: 20,
+    navBarHeight: 44,
     warmEmotions: [],
     hotEmotions: [],
     coldEmotions: [],
@@ -53,63 +57,114 @@ Page({
   stepTimer: null,
 
   onLoad() {
+    this.initSafeArea();
     this.initEmotions();
-    this.checkUsage();
+    this.applyLocalUsage();
+    this.syncMembership();
     this.handleIntro();
   },
 
-  onUnload() {
-    if (this.stepTimer) clearInterval(this.stepTimer);
+  onShow() {
+    if (this.stepTimer) {
+      clearInterval(this.stepTimer);
+      this.stepTimer = null;
+    }
+    if (this.data.isGenerating) {
+      this.setData({ isGenerating: false, loadingStep: 0 });
+    }
+    this.applyLocalUsage();
+    this.syncMembership();
   },
 
-  // 初始化情绪分组
+  onUnload() {
+    if (this.stepTimer) {
+      clearInterval(this.stepTimer);
+      this.stepTimer = null;
+    }
+  },
+
+  initSafeArea() {
+    try {
+      const sys = wx.getSystemInfoSync();
+      const statusBarHeight = sys.statusBarHeight || 20;
+      this.setData({
+        statusBarHeight,
+        navBarHeight: statusBarHeight + 44,
+      });
+    } catch (e) {
+      // ignore
+    }
+  },
+
   initEmotions() {
-    const toGroup = (emotions) => emotions.map(e => ({ ...e, active: false }));
+    const toGroup = (emotions) => emotions.map((e) => ({ ...e, active: false }));
     this.setData({
-      warmEmotions: toGroup(ALL_EMOTIONS.filter(e => e.group === 'warm')),
-      hotEmotions: toGroup(ALL_EMOTIONS.filter(e => e.group === 'hot')),
-      coldEmotions: toGroup(ALL_EMOTIONS.filter(e => e.group === 'cold')),
-      complexEmotions: toGroup(ALL_EMOTIONS.filter(e => e.group === 'complex')),
+      warmEmotions: toGroup(ALL_EMOTIONS.filter((e) => e.group === 'warm')),
+      hotEmotions: toGroup(ALL_EMOTIONS.filter((e) => e.group === 'hot')),
+      coldEmotions: toGroup(ALL_EMOTIONS.filter((e) => e.group === 'cold')),
+      complexEmotions: toGroup(ALL_EMOTIONS.filter((e) => e.group === 'complex')),
     });
   },
 
-  // 检查今日使用次数
-  checkUsage() {
+  /** 本地免费次数（展示用；权威计数在云函数） */
+  applyLocalUsage() {
+    const cached = pay.readCachedMembership();
     const today = new Date().toDateString();
     const stored = wx.getStorageSync('usage');
-    if (!stored || stored.date !== today) {
-      wx.setStorageSync('usage', { date: today, count: 0 });
-      this.setData({ remainingFree: 2 });
+    let remainingFree = FREE_PER_DAY;
+    if (stored && stored.date === today) {
+      remainingFree = Math.max(0, FREE_PER_DAY - (stored.count || 0));
     } else {
-      this.setData({ remainingFree: Math.max(0, 2 - stored.count) });
+      wx.setStorageSync('usage', { date: today, count: 0 });
     }
-    // 检查会员状态
-    const premium = wx.getStorageSync('isPremium');
-    this.setData({ isPremium: !!premium });
+    this.setData({
+      isPremium: !!cached.isPremium,
+      credits: cached.credits || 0,
+      remainingFree,
+    });
   },
 
-  // 入场动画
+  /** 从云函数同步会员 */
+  syncMembership() {
+    pay
+      .getStatus()
+      .then((res) => {
+        if (res.membership) {
+          pay.cacheMembership(res.membership);
+          this.setData({
+            isPremium: !!res.membership.isPremium,
+            credits: res.membership.credits || 0,
+          });
+        }
+      })
+      .catch(() => {
+        // 云函数未部署时忽略
+      });
+  },
+
   handleIntro() {
-    const visited = wx.getStorageSync('momenta-visited');
-    if (!visited) {
-      this.setData({ showIntro: true });
-      setTimeout(() => this.setData({ showIntroText: true }), 800);
+    const isFirst = app.globalData && app.globalData.isFirstVisit;
+    if (!isFirst) return;
+
+    this.setData({ showIntro: true, introOpacity: 1, showIntroText: false });
+    setTimeout(() => this.setData({ showIntroText: true }), 800);
+    setTimeout(() => {
+      this.setData({ introOpacity: 0 });
       setTimeout(() => {
-        this.setData({ introOpacity: 0 });
-        setTimeout(() => this.setData({ showIntro: false }), 800);
-      }, 3200);
-    }
+        this.setData({ showIntro: false });
+        wx.setStorageSync('momenta-visited', true);
+        if (app.globalData) app.globalData.isFirstVisit = false;
+      }, 800);
+    }, 3200);
   },
 
-  // 输入事件
   onInput(e) {
     this.setData({ inputText: e.detail.value });
   },
 
-  // 切换情绪
   toggleEmotion(e) {
     const id = e.currentTarget.dataset.id;
-    const { selectedEmotions } = this.data;
+    const selectedEmotions = [...this.data.selectedEmotions];
     const idx = selectedEmotions.indexOf(id);
 
     if (idx >= 0) {
@@ -120,17 +175,22 @@ Page({
       return;
     }
 
-    // 更新所有分组的 active 状态
-    const updateActive = (group) => group.map(e => ({ ...e, active: selectedEmotions.includes(e.id) }));
-    const labels = selectedEmotions.map(id => {
-      const e = ALL_EMOTIONS.find(em => em.id === id);
-      return e ? e.label : '';
-    }).filter(Boolean);
+    const updateActive = (group) =>
+      group.map((em) => ({ ...em, active: selectedEmotions.includes(em.id) }));
+    const labels = selectedEmotions
+      .map((sid) => {
+        const found = ALL_EMOTIONS.find((em) => em.id === sid);
+        return found ? found.label : '';
+      })
+      .filter(Boolean);
 
     const steps = [...this.data.loadingSteps];
     steps[1] = {
       ...steps[1],
-      text: labels.length > 0 ? `发现情绪：${labels.join('、')}` : '感受情绪氛围...',
+      text:
+        labels.length > 0
+          ? `发现情绪：${labels.join('、')}`
+          : '感受情绪氛围...',
     };
 
     this.setData({
@@ -143,81 +203,129 @@ Page({
     });
   },
 
-  // 生成
+  /** 本地展示扣次（服务端也会扣；双计保证 UI 即时反馈） */
+  deductLocalFreeUsage() {
+    if (this.data.isPremium) return;
+    const today = new Date().toDateString();
+    const stored = wx.getStorageSync('usage') || { date: today, count: 0 };
+    if (stored.date !== today) {
+      stored.date = today;
+      stored.count = 0;
+    }
+    stored.count += 1;
+    wx.setStorageSync('usage', stored);
+    this.setData({ remainingFree: Math.max(0, FREE_PER_DAY - stored.count) });
+  },
+
+  canGenerateLocally() {
+    if (this.data.isPremium) return true;
+    if ((this.data.credits || 0) > 0) return true;
+    if (this.data.remainingFree > 0) return true;
+    return false;
+  },
+
   handleGenerate() {
     if (!this.data.inputText.trim()) return;
 
-    // 检查免费次数
-    if (this.data.remainingFree <= 0 && !this.data.isPremium) {
-      this.showPremium();
+    // 前端预检（最终以云函数为准）
+    if (!this.canGenerateLocally()) {
+      this.openPremium();
       return;
     }
 
     this.setData({ isGenerating: true, error: null, loadingStep: 0 });
 
-    // 分步动画
+    if (this.stepTimer) clearInterval(this.stepTimer);
     this.stepTimer = setInterval(() => {
       if (this.data.loadingStep < this.data.loadingSteps.length - 1) {
         this.setData({ loadingStep: this.data.loadingStep + 1 });
       }
     }, 2000);
 
-    // 调用云函数
-    const emotionLabels = this.data.selectedEmotions.map(id => {
-      const e = ALL_EMOTIONS.find(em => em.id === id);
-      return e ? e.label : '';
-    }).filter(Boolean);
+    const emotionIds =
+      this.data.selectedEmotions.length > 0
+        ? this.data.selectedEmotions
+        : undefined;
 
     wx.cloud.callFunction({
       name: 'generate',
       data: {
         text: this.data.inputText.trim(),
-        emotions: emotionLabels.length > 0 ? emotionLabels : undefined,
+        emotions: emotionIds,
       },
       success: (res) => {
-        clearInterval(this.stepTimer);
-        const result = res.result;
-
-        // 扣减免费次数
-        if (!this.data.isPremium) {
-          const today = new Date().toDateString();
-          const stored = wx.getStorageSync('usage') || { date: today, count: 0 };
-          stored.count += 1;
-          wx.setStorageSync('usage', stored);
-          this.setData({ remainingFree: Math.max(0, 2 - stored.count) });
+        if (this.stepTimer) {
+          clearInterval(this.stepTimer);
+          this.stepTimer = null;
         }
 
-        // 存储结果并跳转
+        const result = res.result || {};
+
+        if (result.error) {
+          this.setData({
+            error: result.error || '凝固失败，请稍后重试',
+            isGenerating: false,
+            loadingStep: 0,
+          });
+          if (result.code === 'QUOTA_EXCEEDED') {
+            setTimeout(() => this.openPremium(), 400);
+          }
+          return;
+        }
+
+        // 同步配额展示
+        if (typeof result.remainingFree === 'number') {
+          this.setData({ remainingFree: result.remainingFree });
+          const today = new Date().toDateString();
+          wx.setStorageSync('usage', {
+            date: today,
+            count: FREE_PER_DAY - result.remainingFree,
+          });
+        } else if (result.quotaMode === 'free') {
+          this.deductLocalFreeUsage();
+        }
+
+        if (typeof result.credits === 'number') {
+          this.setData({ credits: result.credits });
+          const m = pay.readCachedMembership();
+          m.credits = result.credits;
+          if (result.isPremium) m.isPremium = true;
+          pay.cacheMembership(m);
+        }
+        if (result.isPremium) {
+          this.setData({ isPremium: true });
+        }
+
         wx.setStorageSync('currentResult', result);
-        wx.setStorageSync('currentText', this.data.inputText);
-        this.setData({ hasResult: true });
+        wx.setStorageSync('currentText', this.data.inputText.trim());
+        wx.setStorageSync('currentShowText', true);
+
+        this.setData({ isGenerating: false, loadingStep: 0 });
         wx.navigateTo({ url: '/pages/result/result' });
       },
       fail: (err) => {
-        clearInterval(this.stepTimer);
-        console.error('Generate failed:', err);
-        this.setData({ error: '凝固失败，请稍后重试', isGenerating: false });
-      },
-    });
-  },
-
-  // 显示会员
-  showPremium() {
-    wx.showModal({
-      title: '升级 Momenta凝刻',
-      content: '月度会员 ¥19.9/月\n年度会员 ¥128/年\n\n• 无限生成\n• 高清卡片\n• 专属情绪风格',
-      confirmText: '立即升级',
-      cancelText: '稍后再说',
-      success: (res) => {
-        if (res.confirm) {
-          // TODO: 接入微信支付
-          wx.showToast({ title: '支付功能开发中', icon: 'none' });
+        if (this.stepTimer) {
+          clearInterval(this.stepTimer);
+          this.stepTimer = null;
         }
+        console.error('Generate failed:', err);
+        this.setData({
+          error: '凝固失败，请稍后重试',
+          isGenerating: false,
+          loadingStep: 0,
+        });
       },
     });
   },
 
-  // 分享
+  openPremium() {
+    wx.navigateTo({ url: '/pages/premium/premium' });
+  },
+
+  showPremium() {
+    this.openPremium();
+  },
+
   onShareAppMessage() {
     return {
       title: 'Momenta凝刻 — 冻结你的瞬间',

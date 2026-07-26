@@ -1,10 +1,21 @@
 <!--pages/result/result.wxml-->
 <view class="page-bg"></view>
 <view class="page-content">
-  <view class="result-section" wx:if="{{result}}">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav" style="padding-top: {{statusBarHeight}}px;">
+    <view class="custom-nav-inner">
+      <view class="nav-back" bindtap="goBack">
+        <text class="nav-back-icon">‹</text>
+        <text class="nav-back-text">返回</text>
+      </view>
+      <text class="nav-title">记忆卡片</text>
+      <view class="nav-placeholder"></view>
+    </view>
+  </view>
+
+  <view class="result-section" style="padding-top: {{navBarHeight + 16}}px;" wx:if="{{result}}">
     <!-- 记忆卡片 -->
     <view class="memory-card" id="memoryCard">
-      <!-- 图片区 -->
       <view class="card-image-wrap" wx:if="{{result.imageUrl}}">
         <image
           class="card-image"
@@ -19,9 +30,9 @@
       </view>
       <view class="card-image-error" wx:else>
         <text>图片生成失败</text>
+        <text class="card-image-error-sub">解读仍可用，可返回重试</text>
       </view>
 
-      <!-- 卡片内容 -->
       <view class="card-body">
         <view class="card-category">
           <view class="category-dot" style="background: {{result.emotionColor || '#C9A55C'}};"></view>
@@ -41,16 +52,23 @@
       </view>
     </view>
 
-    <!-- 行动按钮 -->
     <view class="action-buttons">
-      <button class="btn-primary" bindtap="saveCard">保存记忆卡片</button>
+      <button class="btn-primary" bindtap="saveCard" loading="{{saving}}" disabled="{{saving}}">
+        保存记忆卡片
+      </button>
       <button class="btn-secondary" bindtap="shareCard">分享给朋友</button>
       <button class="text-link" bindtap="generateAgain">再冻结一个瞬间 →</button>
     </view>
   </view>
 
-  <!-- Footer -->
   <view class="footer">
     <text class="footer-text">Momenta凝刻 — 每个瞬间都值得被冻结</text>
   </view>
+
+  <!-- 离屏合成画布（不可见） -->
+  <canvas
+    canvas-id="cardCanvas"
+    class="offscreen-canvas"
+    style="width: 750px; height: 1400px;"
+  ></canvas>
 </view>

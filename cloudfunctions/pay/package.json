@@ -1,0 +1,9 @@
+{
+  "name": "pay",
+  "version": "1.0.0",
+  "description": "Momenta凝刻 支付下单与会员查询",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
