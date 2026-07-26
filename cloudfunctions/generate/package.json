@@ -1,0 +1,10 @@
+{
+  "name": "generate",
+  "version": "1.0.0",
+  "description": "Momenta凝刻 记忆生成云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "axios": "^1.6.0"
+  }
+}

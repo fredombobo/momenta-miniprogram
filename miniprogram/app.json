@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/result/result"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#0A0A0A",
+    "navigationBarTitleText": "Momenta凝刻",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0A0A0A"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "cloud": true
+}

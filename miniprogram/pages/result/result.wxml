@@ -1,0 +1,56 @@
+<!--pages/result/result.wxml-->
+<view class="page-bg"></view>
+<view class="page-content">
+  <view class="result-section" wx:if="{{result}}">
+    <!-- 记忆卡片 -->
+    <view class="memory-card" id="memoryCard">
+      <!-- 图片区 -->
+      <view class="card-image-wrap" wx:if="{{result.imageUrl}}">
+        <image
+          class="card-image"
+          src="{{result.imageUrl}}"
+          mode="aspectFill"
+          show-menu-by-longpress
+        />
+        <view class="card-overlay">
+          <text class="card-user-text" wx:if="{{showText}}">「{{userText}}」</text>
+          <text class="card-timestamp">{{formattedTime}}</text>
+        </view>
+      </view>
+      <view class="card-image-error" wx:else>
+        <text>图片生成失败</text>
+      </view>
+
+      <!-- 卡片内容 -->
+      <view class="card-body">
+        <view class="card-category">
+          <view class="category-dot" style="background: {{result.emotionColor || '#C9A55C'}};"></view>
+          <text class="category-name" style="color: {{result.emotionColor || '#C9A55C'}};">{{result.category}}</text>
+        </view>
+
+        <text class="card-interpretation" wx:if="{{result.interpretation}}">{{result.interpretation}}</text>
+
+        <view class="card-divider" style="background: linear-gradient(to right, transparent, {{result.emotionColor || '#C9A55C'}}33, transparent);"></view>
+
+        <view class="checkbox-wrap" bindtap="toggleShowText">
+          <view class="checkbox {{showText ? 'checked' : ''}}">
+            <text wx:if="{{showText}}" style="font-size: 18rpx; color: #0A0A0A;">✓</text>
+          </view>
+          <text class="checkbox-label">在卡片上显示我的文字</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 行动按钮 -->
+    <view class="action-buttons">
+      <button class="btn-primary" bindtap="saveCard">保存记忆卡片</button>
+      <button class="btn-secondary" bindtap="shareCard">分享给朋友</button>
+      <button class="text-link" bindtap="generateAgain">再冻结一个瞬间 →</button>
+    </view>
+  </view>
+
+  <!-- Footer -->
+  <view class="footer">
+    <text class="footer-text">Momenta凝刻 — 每个瞬间都值得被冻结</text>
+  </view>
+</view>

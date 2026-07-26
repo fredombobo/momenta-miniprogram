@@ -1,0 +1,115 @@
+/* pages/result/result.wxss */
+
+.result-section {
+  padding: 100rpx 40rpx 40rpx;
+  max-width: 680rpx;
+  margin: 0 auto;
+}
+
+/* Card Image */
+.card-image-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 600rpx;
+  display: block;
+}
+
+.card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 60rpx 32rpx 24rpx;
+  background: linear-gradient(transparent, rgba(10, 10, 10, 0.85) 40%, rgba(10, 10, 10, 0.95));
+}
+
+.card-user-text {
+  font-size: 28rpx;
+  color: #E8E0D4;
+  line-height: 1.6;
+  display: block;
+}
+
+.card-timestamp {
+  font-size: 22rpx;
+  color: #9A918A;
+  margin-top: 12rpx;
+  display: block;
+}
+
+.card-image-error {
+  width: 100%;
+  height: 600rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111111;
+  color: #C9544D;
+  font-size: 28rpx;
+}
+
+/* Card Body */
+.card-body {
+  padding: 32rpx;
+}
+
+.card-category {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.category-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+}
+
+.category-name {
+  font-size: 36rpx;
+  font-weight: 500;
+}
+
+.card-interpretation {
+  font-size: 28rpx;
+  color: #9A918A;
+  line-height: 1.8;
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.card-divider {
+  height: 1rpx;
+  margin-bottom: 20rpx;
+}
+
+.checkbox-label {
+  font-size: 24rpx;
+  color: #5A534D;
+}
+
+/* Action Buttons */
+.action-buttons {
+  margin-top: 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+/* Footer */
+.footer {
+  margin-top: 80rpx;
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.footer-text {
+  font-size: 22rpx;
+  color: #5A534D;
+  opacity: 0.6;
+}

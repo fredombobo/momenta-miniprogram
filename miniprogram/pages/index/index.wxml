@@ -1,0 +1,137 @@
+<!--pages/index/index.wxml-->
+<view class="page-bg"></view>
+<view class="page-content">
+  <!-- 入场动画 -->
+  <view class="intro-overlay" wx:if="{{showIntro}}" style="opacity: {{introOpacity}};">
+    <view class="flex-col-center gap-40">
+      <view class="intro-dot"></view>
+      <text class="intro-text" wx:if="{{showIntroText}}">每个瞬间都值得被冻结</text>
+    </view>
+  </view>
+
+  <!-- Hero -->
+  <view class="hero-section">
+    <view class="hero-title-wrap">
+      <text class="hero-title">Momenta</text>
+      <text class="hero-title-sub">凝刻</text>
+    </view>
+    <text class="hero-subtitle">冻结你的瞬间</text>
+  </view>
+
+  <!-- 输入区 -->
+  <view class="input-section" wx:if="{{!isGenerating && !hasResult}}">
+    <view class="input-wrap">
+      <textarea
+        class="input-area"
+        placeholder="描述那个瞬间... 一句话，一段记忆，一个画面"
+        placeholder-style="color: #5A534D;"
+        value="{{inputText}}"
+        bindinput="onInput"
+        maxlength="500"
+        auto-height
+      />
+      <view class="char-count">{{inputText.length}}/500</view>
+    </view>
+
+    <!-- 情绪选择 -->
+    <view class="emotion-section">
+      <view class="emotion-header">
+        <text class="emotion-label">选择此刻的感受（可选，最多3个）</text>
+        <text class="emotion-count" wx:if="{{selectedEmotions.length > 0}}">已选 {{selectedEmotions.length}}/3</text>
+      </view>
+
+      <!-- 温暖系 -->
+      <text class="group-label">温暖系</text>
+      <view class="emotion-chips-wrap">
+        <view
+          wx:for="{{warmEmotions}}"
+          wx:key="id"
+          class="emotion-chip {{item.active ? 'active' : ''}} {{!item.active && selectedEmotions.length >= 3 ? 'disabled' : ''}}"
+          style="border-color: {{item.active ? '#C9A55C' : item.color + '44'}}; color: {{item.active ? '#0A0A0A' : item.color}};"
+          data-id="{{item.id}}"
+          bindtap="toggleEmotion"
+        >{{item.label}}</view>
+      </view>
+
+      <!-- 炽热系 -->
+      <text class="group-label">炽热系</text>
+      <view class="emotion-chips-wrap">
+        <view
+          wx:for="{{hotEmotions}}"
+          wx:key="id"
+          class="emotion-chip {{item.active ? 'active' : ''}} {{!item.active && selectedEmotions.length >= 3 ? 'disabled' : ''}}"
+          style="border-color: {{item.active ? '#C9A55C' : item.color + '44'}}; color: {{item.active ? '#0A0A0A' : item.color}};"
+          data-id="{{item.id}}"
+          bindtap="toggleEmotion"
+        >{{item.label}}</view>
+      </view>
+
+      <!-- 冷色系 -->
+      <text class="group-label">冷色系</text>
+      <view class="emotion-chips-wrap">
+        <view
+          wx:for="{{coldEmotions}}"
+          wx:key="id"
+          class="emotion-chip {{item.active ? 'active' : ''}} {{!item.active && selectedEmotions.length >= 3 ? 'disabled' : ''}}"
+          style="border-color: {{item.active ? '#C9A55C' : item.color + '44'}}; color: {{item.active ? '#0A0A0A' : item.color}};"
+          data-id="{{item.id}}"
+          bindtap="toggleEmotion"
+        >{{item.label}}</view>
+      </view>
+
+      <!-- 复杂系 -->
+      <text class="group-label">复杂系</text>
+      <view class="emotion-chips-wrap">
+        <view
+          wx:for="{{complexEmotions}}"
+          wx:key="id"
+          class="emotion-chip {{item.active ? 'active' : ''}} {{!item.active && selectedEmotions.length >= 3 ? 'disabled' : ''}}"
+          style="border-color: {{item.active ? '#C9A55C' : item.color + '44'}}; color: {{item.active ? '#0A0A0A' : item.color}};"
+          data-id="{{item.id}}"
+          bindtap="toggleEmotion"
+        >{{item.label}}</view>
+      </view>
+    </view>
+
+    <!-- 免费次数提示 -->
+    <view class="free-usage-hint" wx:if="{{remainingFree <= 0 && !isPremium}}">
+      <text>今日免费次数已用完</text>
+      <view class="btn-upgrade-small" bindtap="showPremium">
+        <text>升级无限生成 →</text>
+      </view>
+    </view>
+    <view class="free-usage-hint" wx:elif="{{remainingFree > 0}}">
+      <text>今日剩余 {{remainingFree}} 次免费生成</text>
+    </view>
+
+    <!-- 生成按钮 -->
+    <button
+      class="btn-primary {{!inputText.trim() ? 'disabled' : ''}}"
+      bindtap="handleGenerate"
+      disabled="{{!inputText.trim()}}"
+    >冻结这个瞬间</button>
+
+    <text class="error-text" wx:if="{{error}}">{{error}}</text>
+  </view>
+
+  <!-- 加载区 -->
+  <view class="loading-section" wx:if="{{isGenerating}}">
+    <view class="loading-glow-wrap">
+      <view class="loading-glow"></view>
+      <view class="loading-glow-inner"></view>
+    </view>
+
+    <view class="loading-steps">
+      <view
+        wx:for="{{loadingSteps}}"
+        wx:key="index"
+        class="loading-step {{index <= loadingStep ? 'active' : ''}}"
+        style="opacity: {{index <= loadingStep ? 1 : 0}};"
+      >
+        <text class="step-icon">{{item.icon}}</text>
+        <text class="step-text" style="color: {{index === loadingStep ? '#C9A55C' : '#5A534D'}};">{{item.text}}</text>
+        <view class="step-shimmer" wx:if="{{index === loadingStep}}"></view>
+      </view>
+    </view>
+  </view>
+</view>
